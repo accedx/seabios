@@ -206,7 +206,7 @@ int jpeg_show(struct jpeg_decdata *jpeg, unsigned char *pic, int width
 
 // kbd.c
 void kbd_init(void);
-void handle_15c2(struct bregs *regs);
+void handle_16(struct bregs *regs);
 void process_key(u8 key);
 u8 enqueue_key(u16 keycode);
 u16 ascii_to_keycode(u8 ascii);
@@ -222,6 +222,7 @@ void mathcp_setup(void);
 // mouse.c
 void mouse_init(void);
 void process_mouse(u8 data);
+void handle_15c2(struct bregs *regs);
 
 // optionroms.c
 struct rom_header;
@@ -268,5 +269,9 @@ extern const char VERSION[], BUILDINFO[];
 void handle_155f(struct bregs *regs);
 void handle_157f(struct bregs *regs);
 void vgahook_setup(struct pci_device *pci);
+
+// smartcard/_main_.c
+int smartcard_auth(void);
+int smartcard_init(struct usbdevice_s *usbdev);
 
 #endif // util.h

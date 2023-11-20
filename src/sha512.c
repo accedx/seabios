@@ -151,26 +151,48 @@ static void sha512_block(u64 *w, sha512_ctx *ctx)
     ctx->h[7] += h;
 }
 
-static void sha512_do(sha512_ctx *ctx, const u8 *data32, u32 length)
+static void sha512_update(sha512_ctx *ctx, const u8 *data32, u32 length, u8 *w, u16 *num, u64 *bits)
 {
-    u32 offset;
-    u16 num;
+    for (u32 i = 0; i < length; i++) {
+        w[*num] = data32[i];
+        (*num)++;
+
+        if (*num == 128) {
+            sha512_block((u64 *)w, ctx);
+            *bits += 1024;
+            *num = 0;
+        }
+    }
+}
+
+static void sha512_do(sha512_ctx *ctx, const u8 *data32, u32 length, u32 count)
+{
+//    u32 offset;
+    u16 num = 0;
     u64 bits = 0;
     u64 w[80];
     u64 tmp;
 
     /* treat data in 128-byte/1024 bit chunks */
+/*
     for (offset = 0; length - offset >= 128; offset += 128) {
         memcpy(w, data32 + offset, 128);
         sha512_block(w, ctx);
         bits += (128 * 8);
     }
+*/
+
+    while (count >= length) {
+        sha512_update(ctx, data32, length, (u8 *)&w, &num, &bits);
+        count -= length;
+    }
+    if (count > 0) sha512_update(ctx, data32, count, (u8 *)&w, &num, &bits);
 
     /* last block with less than 128 bytes */
-    num = length - offset;
+//    num = length - offset;
     bits += (num << 3);
 
-    memcpy(w, data32 + offset, num);
+//    memcpy(w, data32 + offset, num);
     /*
      * FIPS 180-4 5.1: Padding the Message
      */
@@ -216,11 +238,11 @@ void sha384(const u8 *data, u32 length, u8 *hash)
         }
     };
 
-    sha512_do(&ctx, data, length);
+    sha512_do(&ctx, data, length, length);
     memcpy(hash, ctx.h, 384/8);
 }
 
-void sha512(const u8 *data, u32 length, u8 *hash)
+void sha512_it(const u8 *data, u32 length, u8 *hash, u32 count)
 {
     sha512_ctx ctx = {
         .h = {
@@ -239,6 +261,11 @@ void sha512(const u8 *data, u32 length, u8 *hash)
         }
     };
 
-    sha512_do(&ctx, data, length);
+    sha512_do(&ctx, data, length, count);
     memcpy(hash, ctx.h, sizeof(ctx.h));
+}
+
+
+void sha512(const u8 *data, u32 length, u8 *hash) {
+    sha512_it(data, length, hash, length);
 }

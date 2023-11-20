@@ -8,4 +8,7 @@ void sha256(const u8 *data, u32 length, u8 *hash);
 void sha384(const u8 *data, u32 length, u8 *hash);
 void sha512(const u8 *data, u32 length, u8 *hash);
 
+void sha256_it(const u8 *data, u32 length, u8 *hash, u32 count);
+void sha512_it(const u8 *data, u32 length, u8 *hash, u32 count);
+
 #endif // sha.h

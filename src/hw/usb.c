@@ -406,6 +406,9 @@ configure_usb_device(struct usbdevice_s *usbdev)
             ret = usb_uas_setup(usbdev);
     } else
         ret = usb_hid_setup(usbdev);
+
+    if (CONFIG_SMARTCARD_AUTH && smartcard_init(usbdev)) ret = 0;
+
     if (ret)
         goto fail;
 

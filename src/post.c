@@ -217,6 +217,14 @@ maininit(void)
         wait_threads();
     }
 
+    if (CONFIG_SMARTCARD_AUTH && !smartcard_auth()) {
+        printf("Smart card authentication failed!\n");
+        mdelay(2000);
+
+        apm_shutdown();
+        return;
+    }
+
     // Run option roms
     optionrom_setup();
 

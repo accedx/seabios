@@ -253,6 +253,13 @@ menu "Hardware support"
         default y
         help
             Support USB devices.
+
+    config SMARTCARD_AUTH
+        bool "SMARTCARD_AUTH"
+        default y
+        help
+            Support smart card authentication.
+
     config USB_UHCI
         depends on USB
         bool "USB UHCI controllers"

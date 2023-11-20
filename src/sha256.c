@@ -143,26 +143,48 @@ static void sha256_block(u32 *w, sha256_ctx *ctx)
     ctx->h[7] += h;
 }
 
-static void sha256_do(sha256_ctx *ctx, const u8 *data32, u32 length)
+static void sha256_update(sha256_ctx *ctx, const u8 *data32, u32 length, u8 *w, u16 *num, u32 *bits)
 {
-    u32 offset;
-    u16 num;
+    for (u32 i = 0; i < length; i++) {
+        w[*num] = data32[i];
+        (*num)++;
+
+        if (*num == 64) {
+            sha256_block((u32 *)w, ctx);
+            *bits += 512;
+            *num = 0;
+        }
+    }
+}
+
+static void sha256_do(sha256_ctx *ctx, const u8 *data32, u32 length, u32 count)
+{
+//  u32 offset;
+    u16 num = 0;
     u32 bits = 0;
     u32 w[64];
     u64 tmp;
 
     /* treat data in 64-byte chunks */
+/*
     for (offset = 0; length - offset >= 64; offset += 64) {
         memcpy(w, data32 + offset, 64);
         sha256_block((u32 *)w, ctx);
         bits += (64 * 8);
     }
+*/
+
+    while (count >= length) {
+        sha256_update(ctx, data32, length, (u8 *)&w, &num, &bits);
+        count -= length;
+    }
+    if (count > 0) sha256_update(ctx, data32, count, (u8 *)&w, &num, &bits);
 
     /* last block with less than 64 bytes */
-    num = length - offset;
+//  num = length - offset;
     bits += (num << 3);
 
-    memcpy(w, data32 + offset, num);
+//  memcpy(w, data32 + offset, num);
     /*
      * FIPS 180-4 5.1: Padding the Message
      */
@@ -187,7 +209,7 @@ static void sha256_do(sha256_ctx *ctx, const u8 *data32, u32 length)
         ctx->h[num] = cpu_to_be32(ctx->h[num]);
 }
 
-void sha256(const u8 *data, u32 length, u8 *hash)
+void sha256_it(const u8 *data, u32 length, u8 *hash, u32 count)
 {
     sha256_ctx ctx = {
         .h = {
@@ -206,6 +228,10 @@ void sha256(const u8 *data, u32 length, u8 *hash)
         }
     };
 
-    sha256_do(&ctx, data, length);
+    sha256_do(&ctx, data, length, count);
     memcpy(hash, ctx.h, sizeof(ctx.h));
+}
+
+void sha256(const u8 *data, u32 length, u8 *hash) {
+    sha256_it(data, length, hash, length);
 }
